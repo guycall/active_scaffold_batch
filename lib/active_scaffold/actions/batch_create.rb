@@ -69,56 +69,37 @@ module ActiveScaffold::Actions
     end
 
     def marked_records_parent
-      if params[:batch_create_by]
-        session_parent = active_scaffold_session_storage(params[:batch_create_by])
-        @marked_records_parent = session_parent[:marked_records] || Set.new
-      else
-        @marked_records_parent = false
-      end if @marked_records_parent.nil?
+      if @marked_records_parent.nil?
+        @marked_records_parent = if params[:batch_create_by]
+          session_parent = active_scaffold_session_storage(params[:batch_create_by])
+          session_parent[:marked_records] || Set.new
+        else
+          false
+        end
+      end
       @marked_records_parent
     end
 
     def before_do_batch_create
       create_columns = active_scaffold_config.batch_create.columns
-      @batch_create_values = attribute_values_from_params(create_columns, params[:record])
-    end
-
-    # in case of an error we have to prepare @record object to have assigned all
-    # defined batch_update values, however, do not set those ones with an override
-    # these ones will manage on their own
-    def prepare_error_record
-      do_new
-      batch_create_values.each do |attribute, value|
-        form_ui = colunm_form_ui(value[:column])
-        set_record_attribute(value[:column], attribute, value[:value]) unless form_ui && override_batch_create_value?(form_ui)
-      end
+      @batch_create_values = create_attribute_values_from_params(create_columns, params[:record])
     end
 
     def batch_create_listed
       case active_scaffold_config.batch_create.process_mode
       when :create then
-        batch_create_by_records.each {|batch_record| create_record(batch_record)}
+        batch_create_by_records.each {|batch_record| create_record_in_batch(batch_record)}
       else
         Rails.logger.error("Unknown process_mode: #{active_scaffold_config.batch_create.process_mode} for action batch_create")
       end
     end
-
-    def batch_create_marked
-      case active_scaffold_config.batch_create.process_mode
-      when :create then
-        batch_create_by_records.each do |by_record|
-          create_record(by_record)
-        end
-      else
-        Rails.logger.error("Unknown process_mode: #{active_scaffold_config.batch_create.process_mode} for action batch_create")
-      end
-    end
+    alias_method :batch_create_marked, :batch_create_listed
 
     def new_batch_create_record(created_by)
       new_model
     end
 
-    def create_record(created_by)
+    def create_record_in_batch(created_by)
       @successful = nil
       @record = new_batch_create_record(created_by)
       @record.send("#{batch_create_by_column.to_s}=", created_by)
@@ -136,33 +117,19 @@ module ActiveScaffold::Actions
       end
     end
 
-    def set_record_attribute(column, attribute, value)
-      form_ui = colunm_form_ui(column)
-      if form_ui && override_batch_create_value?(form_ui)
-        @record.send("#{attribute}=", send(override_batch_create_value(form_ui), column, @record, value))
-      else
-        @record.send("#{attribute}=", value)
-      end
-    end
-
-    def colunm_form_ui(column)
-      form_ui = column.form_ui
-      form_ui = column.column.type if form_ui.nil? && column.column
-    end
-
     def batch_create_by_column
       active_scaffold_config.batch_create.default_batch_by_column
     end
 
-
-    def attribute_values_from_params(columns, attributes)
+    def create_attribute_values_from_params(columns, attributes)
       values = {}
-      columns.each :for => new_model, :crud_type => :create, :flatten => true do |column|
+      columns.each :for => model, :crud_type => :create, :flatten => true do |column|
+        next unless attributes.has_key?(column.name)
         if batch_create_by_column == column.name
           @batch_create_by_records = column_plural_assocation_value_from_value(column, attributes[column.name])
         else
           values[column.name] = {:column => column, :value => column_value_from_param_value(nil, column, attributes[column.name])}
-        end if attributes.has_key?(column.name)
+        end
       end
       values
     end
@@ -178,12 +145,9 @@ module ActiveScaffold::Actions
       false
     end
 
-    def override_batch_create_value?(form_ui)
-      respond_to?(override_batch_create_value(form_ui))
-    end
-
     def override_batch_create_value(form_ui)
-      "batch_create_value_for_#{form_ui}"
+      method = "batch_create_value_for_#{form_ui}"
+      method if respond_to? method
     end
 
     private

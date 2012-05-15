@@ -11,6 +11,9 @@ module ActiveScaffold::Actions
     
     protected
 
+    def before_do_batch_destroy
+    end
+
     def batch_destroy_listed
       case active_scaffold_config.batch_destroy.process_mode
       when :delete then

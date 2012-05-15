@@ -49,19 +49,6 @@ module ActiveScaffold::Actions
       render(:partial => 'batch_update_form')
     end
 
-    def selected_columns
-      if @selected_columns.nil?
-        @selected_columns = []
-        if params[:record] && params[:record].is_a?(Hash)
-          params[:record].each do |key, value|
-            @selected_columns << key.to_sym if value[:operator] != 'NO_UPDATE'
-          end
-        end
-      end
-      @selected_columns
-    end
-
-    
     def batch_update_values
       @batch_update_values || {}
     end
@@ -91,25 +78,18 @@ module ActiveScaffold::Actions
     end
 
     def before_do_batch_update
-      update_columns = active_scaffold_config.batch_update.columns
-      @batch_update_values = attribute_values_from_params(update_columns, params[:record])
-    end
-
-    # in case of an error we have to prepare @record object to have assigned all
-    # defined batch_update values, however, do not set those ones with an override
-    # these ones will manage on their own
-    def prepare_error_record
-      do_new
-      batch_update_values.each do |attribute, value|
-        form_ui = colunm_form_ui(value[:column])
-        set_record_attribute(value[:column], attribute, value[:value]) unless form_ui && override_batch_update_value?(form_ui)
+      update_columns = active_scaffold_config.batch_update.columns.select do |column|
+        if params[:record] && params[:record].is_a?(Hash) && params[:record][column.name].is_a?(Hash)
+          params[:record][column.name][:operator] != 'NO_UPDATE'
+        end
       end
+      @batch_update_values = update_attribute_values_from_params(update_columns, params[:record])
     end
 
     def batch_update_listed
       case active_scaffold_config.batch_update.process_mode
       when :update then
-        each_record_in_scope {|record| update_record(record) if authorized_for_job?(record)}
+        each_record_in_scope {|record| update_record_in_batch(record) if authorized_for_job?(record)}
       when :update_all then
         updates = updates_for_update_all
         unless updates.first.empty?
@@ -126,7 +106,7 @@ module ActiveScaffold::Actions
     def batch_update_marked
       case active_scaffold_config.batch_update.process_mode
       when :update then
-        active_scaffold_config.model.marked.each {|record| update_record(record) if authorized_for_job?(record)}
+        active_scaffold_config.model.marked.each {|record| update_record_in_batch(record) if authorized_for_job?(record)}
       when :update_all then
         updates = updates_for_update_all
         unless updates.first.empty?
@@ -144,22 +124,22 @@ module ActiveScaffold::Actions
         sql_set, value = get_update_all_attribute(value[:column], attribute, value[:value])
         unless sql_set.nil?
           update_all.first << sql_set
-          update_all << value if sql_set.include?('?')
+          update_all << value if value.present?
         end
       end
       update_all[0] = update_all.first.join(',')
       update_all
     end
 
-    def update_record(record)
+    def update_record_in_batch(record)
       @successful = nil
       @record = record
 
       batch_update_values.each do |attribute, value|
-        set_record_attribute(value[:column], attribute, value[:value])
+        set_record_attribute(value[:column], attribute, value)
       end
       
-      update_save({:no_record_param_update => true})
+      update_save(:no_record_param_update => true)
       if successful?
         @record.marked = false if batch_scope == 'MARKED'
       else
@@ -167,26 +147,11 @@ module ActiveScaffold::Actions
       end
     end
 
-    def set_record_attribute(column, attribute, value)
-      form_ui = colunm_form_ui(column)
-      if form_ui && override_batch_update_value?(form_ui)
-        @record.send("#{attribute}=", send(override_batch_update_value(form_ui), column, @record, value))
-      else
-        @record.send("#{attribute}=", value[:operator] == 'NULL' ? nil : value[:value])
-      end
-    end
-
-    def colunm_form_ui(column)
-      form_ui = column.form_ui
-      form_ui = column.column.type if form_ui.nil? && column.column
-    end
-
     def get_update_all_attribute(column, attribute, value)
-      form_ui = column.form_ui
-      form_ui = column.column.type if form_ui.nil? && column.column
+      form_ui = column_form_ui(column)
       
-      if form_ui && override_batch_update_all_value?(form_ui)
-        update_value =  send(override_batch_update_all_value(form_ui), column, value)
+      if form_ui && (method = override_batch_update_all_value(form_ui))
+        update_value = send(method, column, value)
         if update_value.nil?
           sql_set = nil
         else
@@ -195,21 +160,22 @@ module ActiveScaffold::Actions
         end
       else
         sql_set = "#{attribute} = ?"
-        update_value = value[:operator] == 'NULL' ? nil : value[:value]
+        update_value = value[:value]
       end
       
       return sql_set, update_value
     end
 
-    def attribute_values_from_params(columns, attributes)
+    def update_attribute_values_from_params(columns, attributes)
       values = {}
       attributes = {} unless attributes.is_a?(Hash)
       columns.each :for => new_model, :crud_type => :update, :flatten => true do |column|
-        values[column.name] = {:column => column, :value => attributes[column.name].merge(:value => column_value_from_param_value(nil, column, attributes[column.name][:value]))} if selected_columns.include? column.name
+        value = attributes[column.name]
+        value = value.merge(:value => (value[:operator] == 'NULL') ? nil : column_value_from_param_value(nil, column, value[:value])
+        values[column.name] = {:column => column, :value => value}
       end
       values
     end
-
     
     # The default security delegates to ActiveRecordPermissions.
     # You may override the method to customize.
@@ -246,8 +212,8 @@ module ActiveScaffold::Actions
 
     def batch_update_all_value_for_numeric(column, calculation_info)
       if ActiveScaffold::Actions::BatchUpdate::GenericOperators.include?(calculation_info[:operator]) || ActiveScaffold::Actions::BatchUpdate::NumericOperators.include?(calculation_info[:operator])
-        operand =  active_scaffold_config.model.quote_value(self.class.condition_value_for_numeric(column, calculation_info[:value]))
-        if calculation_info[:opt] == 'PERCENT'#
+        operand = active_scaffold_config.model.quote_value(self.class.condition_value_for_numeric(column, calculation_info[:value]))
+        if calculation_info[:opt] == 'PERCENT'
           operand = "#{active_scaffold_config.model.connection.quote_column_name(column.name)} / 100.0 * #{operand}"
         end
         case calculation_info[:operator]
@@ -291,22 +257,14 @@ module ActiveScaffold::Actions
     end
     alias_method :batch_update_value_for_calendar_date_select, :batch_update_value_for_date_picker
 
-
-
-    def override_batch_update_value?(form_ui)
-      respond_to?(override_batch_update_value(form_ui))
-    end
-
     def override_batch_update_value(form_ui)
-      "batch_update_value_for_#{form_ui}"
-    end
-
-    def override_batch_update_all_value?(form_ui)
-      respond_to?(override_batch_update_all_value(form_ui))
+      method = "batch_update_value_for_#{form_ui}"
+      method if respond_to? method
     end
 
     def override_batch_update_all_value(form_ui)
-      "batch_update_all_value_for_#{form_ui}"
+      method = "batch_update_all_value_for_#{form_ui}"
+      method if respond_to? method
     end
 
     private

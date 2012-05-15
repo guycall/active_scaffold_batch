@@ -16,8 +16,7 @@ module ActiveScaffold::Actions
 
     def process_batch
       do_batch
-      do_search if respond_to? :do_search
-      do_list
+      do_refresh_list
     end
 
     def batch_scope
@@ -32,10 +31,30 @@ module ActiveScaffold::Actions
       @error_records ||= []
     end
 
-     # in case of an error we have to prepare @record object to have assigned all
+    def set_record_attribute(column, attribute, value)
+      form_ui = column_form_ui(column)
+      if form_ui && (method = send("override_#{action_name}_value", form_ui))
+        @record.send("#{attribute}=", send(method, column, @record, value))
+      else
+        @record.send("#{attribute}=", action_name == 'batch_update' ? value[:value] : value)
+      end
+    end
+
+    def column_form_ui(column)
+      form_ui = column.form_ui
+      form_ui = column.column.type if form_ui.nil? && column.column
+      form_ui
+    end
+
+    # in case of an error we have to prepare @record object to have assigned all
     # defined batch_update values, however, do not set those ones with an override
     # these ones will manage on their own
     def prepare_error_record
+      do_new
+      send("#{action_name}_values").each do |attribute, value|
+        form_ui = column_form_ui(value[:column])
+        set_record_attribute(value[:column], attribute, value[:value]) unless form_ui && send("override_#{action_name}_value", form_ui)
+      end
     end
 
     def batch_successful?
@@ -43,7 +62,7 @@ module ActiveScaffold::Actions
     end
 
     def do_batch
-      send("before_do_#{action_name}") if respond_to?("before_do_#{action_name}")
+      send("before_do_#{action_name}")
       send("#{action_name}_#{batch_scope.downcase}") if !batch_scope.nil? && respond_to?("#{action_name}_#{batch_scope.downcase}")
       prepare_error_record unless batch_successful?
     end
