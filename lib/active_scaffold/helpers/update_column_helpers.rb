@@ -8,13 +8,13 @@ module ActiveScaffold
         options = active_scaffold_input_options(column, scope, options)
 
         # first, check if the dev has created an override for this specific field for search
-        if override_update_field?(column)
-          send(override_update_field(column), @record, options)
+        if (method = override_update_field(column))
+          send(method, @record, options)
         # second, check if the dev has specified a valid form_ui for this column, using specific ui for searches
-        elsif column.form_ui and override_update?(column.form_ui)
-          send(override_update(column.form_ui), column, options)
-       elsif column.column && column.form_ui.nil? && override_update?(column.column.type)
-          send(override_update(column.column.type), column, options)
+        elsif column.form_ui and (method = override_update(column.form_ui))
+          send(method, column, options)
+       elsif column.column and column.form_ui.nil? and (method = override_update(column.column.type))
+          send(method, column, options)
         else
           active_scaffold_update_generic_operators_select(column, options)<< ' ' << active_scaffold_render_input(column, options.merge(:name => "record[#{column.name}][value]"))
         end
@@ -78,22 +78,15 @@ module ActiveScaffold
       ## Search column override signatures
       ##
 
-      def override_update_field?(column)
-        respond_to?(override_update_field(column))
-      end
-
       # the naming convention for overriding form fields with helpers
       def override_update_field(column)
-        "#{column.name}_update_column"
-      end
-
-      def override_update?(update_ui)
-        respond_to?(override_update(update_ui))
+        override_helper column, 'update_column'
       end
 
       # the naming convention for overriding search input types with helpers
       def override_update(update_ui)
-        "active_scaffold_update_#{update_ui}"
+        method = "active_scaffold_update_#{update_ui}"
+        method if respond_to? method
       end
     end
   end
