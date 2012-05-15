@@ -20,5 +20,3 @@ module ActiveScaffold
     ActiveScaffold.autoload_subdir('helpers', self, File.dirname(__FILE__))
   end
 end
-
-I18n.load_path += Dir[File.join(File.dirname(__FILE__), 'active_scaffold_batch', 'locale', '*.{rb,yml}')]
