@@ -1,0 +1,11 @@
+es:
+  active_scaffold:
+    no_update: No Actualizar
+    replace: Reemplazar
+    plus: '+'
+    minus: '-'
+    times: '*'
+    division: '/'
+    absolute: abs
+    percent: '%'
+    batch_update: 'Actualizar Lote'
