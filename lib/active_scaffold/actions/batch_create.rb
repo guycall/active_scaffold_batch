@@ -56,7 +56,6 @@ module ActiveScaffold::Actions
         end
       else # just a regular post
         if batch_successful?
-          flash[:info] = as_(:created_model, :model => @record.to_label)
           return_to_main
         else
           render(:action => 'batch_create')
@@ -122,16 +121,17 @@ module ActiveScaffold::Actions
       if run_in_transaction?
         active_scaffold_config.model.transaction do
           send(method)
-          Rails.logger.debug "RESULT #{@created_records}/#{@processed_records}"
           if @processed_records == @created_records
             @error_records = []
           else
+            @created_records = 0
             raise ActiveRecord::Rollback
           end
         end
       else
         send(method)
       end
+      flash[:info] = as_(:some_records_created, :count => @created_records, :model => active_scaffold_config.label(:count => @created_records)) if batch_successful? || @created_records > 0
     end
 
     def batch_create_listed

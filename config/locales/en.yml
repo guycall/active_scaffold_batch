@@ -10,3 +10,12 @@ en:
     percent: '%'
     batch_update: 'Batch Update'
     add_some_records: 'Add %{number_input} %{model}'
+    records: 'Records'
+    batch_processing_successful: "Batch processing successful"
+    batch: Batch
+    some_records_created:
+      one: "1 %{model} was created"
+      other: "%{count} %{model} were created"
+    delete_model: "Delete %{model}"
+    listed: listed
+    marked: marked

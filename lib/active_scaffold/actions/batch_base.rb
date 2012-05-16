@@ -86,9 +86,7 @@ module ActiveScaffold::Actions
             render :action => 'on_batch_base.js', :layout => false
           end
         else # just a regular post
-          if batch_successful?
-            flash[:info] = as_(:batch_processing_successful)
-          end
+          flash[:info] = as_(:batch_processing_successful) if batch_successful?
           return_to_main
         end
       end

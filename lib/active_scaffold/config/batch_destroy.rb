@@ -47,7 +47,7 @@ module ActiveScaffold::Config
     # the label= method already exists in the Form base class
     def label(model = nil)
       model ||= @core.label(:count => 2)
-      @label ? as_(@label) : as_(:deleted_model, :model => model)
+      @label ? as_(@label) : as_(:delete_model, :model => model)
     end
 
   end

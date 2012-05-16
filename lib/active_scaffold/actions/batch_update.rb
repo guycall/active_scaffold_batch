@@ -55,6 +55,7 @@ module ActiveScaffold::Actions
 
     def batch_update_respond_to_html
       if params[:iframe]=='true' # was this an iframe post ?
+        flash[:info] = as_(:batch_processing_successful) if batch_successful?
         do_refresh_list
         responds_to_parent do
           render :action => 'on_batch_update.js', :layout => false
@@ -70,6 +71,7 @@ module ActiveScaffold::Actions
     end
 
     def batch_update_respond_to_js
+      flash[:info] = as_(:batch_processing_successful) if batch_successful?
       do_refresh_list
       render :action => 'on_batch_update'
     end
