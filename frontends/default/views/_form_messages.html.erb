@@ -1,7 +1,7 @@
-<% if @error_records.present? -%>
+<% if @error_records.present? && @record_errors.is_a?(Array) -%>
   <%= render :partial => 'messages' unless request.xhr? %>
 
-  <% @error_records.each do |_, record| %>
+  <% @error_records.each do |record| %>
     <%= active_scaffold_error_messages_for record, :object_name => "#{record.class.model_name.human.downcase}#{record.new_record? ? '' : ": #{record.to_label}"}" %>
   <% end %>
 <% else %>

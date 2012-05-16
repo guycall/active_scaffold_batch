@@ -1,3 +1,6 @@
+.active-scaffold .errorExplanation {
+  clear: left;
+}
 .batch-create-rows {
   float: right;
 }

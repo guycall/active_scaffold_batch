@@ -1,6 +1,7 @@
 <div id="<%= element_form_id :action => form_action %>-content">
 <% if @error_records.present? -%>
 <% @error_records.each do |scope, @record| -%>
+  <%= render :partial => 'form_messages' %>
   <%= render :partial => 'form', :locals => { :columns => columns, :form_action => form_action, :scope => "[#{scope}]" } %>
 <% end -%>
 <% else -%>

@@ -23,7 +23,7 @@ module ActiveScaffold::Actions
     end
 
     def error_records
-      @error_records ||= {}
+      @error_records ||= []
     end
 
     def set_record_attribute(column, attribute, value)
@@ -67,7 +67,7 @@ module ActiveScaffold::Actions
         true
       else
         record.errors.add(:base, as_(:no_authorization_for_action, :action => action_name))
-        error_records[record.id || temporary_id] = record
+        error_records << record
         false
       end
     end

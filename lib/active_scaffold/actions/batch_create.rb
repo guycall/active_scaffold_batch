@@ -85,6 +85,7 @@ module ActiveScaffold::Actions
 
     def do_batch_add
       @records = {}
+      params[:num_records] ||= 1
       params[:num_records].to_i.times do
         @records[temporary_id] = do_new
       end
@@ -122,6 +123,7 @@ module ActiveScaffold::Actions
     alias_method :batch_create_marked, :batch_create_listed
 
     def batch_create_multiple
+      @error_records = {}
       params[:record].each do |scope, record_hash|
         do_create(record_hash)
         error_records[scope] = @record unless successful?
@@ -145,7 +147,7 @@ module ActiveScaffold::Actions
         if successful?
           marked_records_parent.delete(created_by.id) if batch_scope == 'MARKED' && marked_records_parent
         else
-          error_records[created_by.id] = @record
+          error_records << @record
         end
       end
     end
