@@ -9,3 +9,5 @@ de:
     absolute: abs
     percent: '%'
     batch_update: 'Speichern'
+    add_some_records: 'Add %{number_input} %{model}'
+

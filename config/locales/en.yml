@@ -9,3 +9,4 @@ en:
     absolute: abs
     percent: '%'
     batch_update: 'Batch Update'
+    add_some_records: 'Add %{number_input} %{model}'

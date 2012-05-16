@@ -1,0 +1,6 @@
+.batch-create-rows {
+  float: right;
+}
+.batch-create-rows input {
+  width: 4em;
+}

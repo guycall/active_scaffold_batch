@@ -1,6 +1,6 @@
 <%
 unless @error_records.empty?
-  flash[:error] = @error_records.collect do |record|
+  flash[:error] = @error_records.collect do |_, record|
     active_scaffold_error_messages_for(record, :object_name => "#{record.class.model_name.human.downcase}#{record.new_record? ? '' : ": #{record.to_label}"}", :header_message => '', :message => "#{record.class.model_name.human.downcase}#{record.new_record? ? '' : ": #{record.to_label}"}", :container_tag => nil, :list_type => :br)
   end.join.html_safe
 end

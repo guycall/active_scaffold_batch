@@ -52,7 +52,7 @@ module ActiveScaffold::Actions
       if successful?
         @record.marked = false if batch_scope == 'MARKED'
       else
-        error_records << @record
+        error_records[@record.id] = @record
       end
     end
 

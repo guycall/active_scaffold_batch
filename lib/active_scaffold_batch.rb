@@ -20,3 +20,5 @@ module ActiveScaffold
     ActiveScaffold.autoload_subdir('helpers', self, File.dirname(__FILE__))
   end
 end
+
+ActiveScaffold.stylesheets << 'active_scaffold_batch'

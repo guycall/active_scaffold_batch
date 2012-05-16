@@ -14,21 +14,16 @@ module ActiveScaffold::Actions
       end
     end
 
-    def process_batch
-      do_batch
-      do_refresh_list
-    end
-
     def batch_scope
-      if params[:batch_scope]
+      if @batch_scope.nil? && params[:batch_scope]
         @batch_scope = params[:batch_scope] if ['LISTED', 'MARKED'].include?(params[:batch_scope])
         params.delete :batch_scope
-      end if @batch_scope.nil?
+      end
       @batch_scope
     end
 
     def error_records
-      @error_records ||= []
+      @error_records ||= {}
     end
 
     def set_record_attribute(column, attribute, value)
@@ -61,7 +56,7 @@ module ActiveScaffold::Actions
       error_records.empty?
     end
 
-    def do_batch
+    def process_batch
       send("before_do_#{action_name}")
       send("#{action_name}_#{batch_scope.downcase}") if !batch_scope.nil? && respond_to?("#{action_name}_#{batch_scope.downcase}")
       prepare_error_record unless batch_successful?
@@ -72,9 +67,13 @@ module ActiveScaffold::Actions
         true
       else
         record.errors.add(:base, as_(:no_authorization_for_action, :action => action_name))
-        error_records << record
+        error_records[record.id || temporary_id] = record
         false
       end
+    end
+
+    def temporary_id
+      (Time.now.to_f*1000).to_i.to_s
     end
 
     def batch_base_respond_to_html
@@ -82,6 +81,7 @@ module ActiveScaffold::Actions
         send("#{action_name}_respond_to_html")
       else
         if params[:iframe]=='true' # was this an iframe post ?
+          do_refresh_list
           responds_to_parent do
             render :action => 'on_batch_base.js', :layout => false
           end
@@ -98,6 +98,7 @@ module ActiveScaffold::Actions
       if respond_to? "#{action_name}_respond_to_js"
         send("#{action_name}_respond_to_js")
       else  
+        do_refresh_list
         render :action => "on_batch_base"
       end
     end

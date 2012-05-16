@@ -9,3 +9,4 @@ es:
     absolute: abs
     percent: '%'
     batch_update: 'Actualizar Lote'
+    add_some_records: 'Añadir %{number_input} %{model}'

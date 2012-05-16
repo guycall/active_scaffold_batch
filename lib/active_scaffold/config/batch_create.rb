@@ -4,7 +4,6 @@ module ActiveScaffold::Config
     def initialize(*args)
       super
       @process_mode = self.class.process_mode
-      @action_group ||= 'collection.batch'
       @list_mode_enabled = self.class.list_mode_enabled
     end
 
@@ -47,6 +46,9 @@ module ActiveScaffold::Config
     # you may batch create a player records for a list of teams
     attr_accessor :default_batch_by_column
 
+    def action_group
+      @action_group || (default_batch_by_column ? 'collection.group' : 'collection')
+    end
 
     # the label= method already exists in the Form base class
     def label(model = nil)
