@@ -85,9 +85,9 @@ module ActiveScaffold::Actions
 
     def do_batch_add
       @records = {}
-      params[:num_records] ||= 1
+      t = temporary_id
       params[:num_records].to_i.times do
-        @records[temporary_id] = do_new
+        @records[t.succ!] = do_new
       end
     end
 
