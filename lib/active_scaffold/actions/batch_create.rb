@@ -112,7 +112,33 @@ module ActiveScaffold::Actions
       end
     end
 
+    def run_in_transaction?
+      active_scaffold_config.batch_create.run_in_transaction
+    end
+
+    def do_batch_create_method(method)
+      @created_records = 0
+      @processed_records = 0
+      if run_in_transaction?
+        active_scaffold_config.model.transaction do
+          send(method)
+          Rails.logger.debug "RESULT #{@created_records}/#{@processed_records}"
+          if @processed_records == @created_records
+            @error_records = []
+          else
+            raise ActiveRecord::Rollback
+          end
+        end
+      else
+        send(method)
+      end
+    end
+
     def batch_create_listed
+      do_batch_create_method(:do_batch_create_listed)
+    end
+
+    def do_batch_create_listed
       case active_scaffold_config.batch_create.process_mode
       when :create then
         batch_create_by_records.each {|batch_record| create_record_in_batch(batch_record)}
@@ -123,10 +149,16 @@ module ActiveScaffold::Actions
     alias_method :batch_create_marked, :batch_create_listed
 
     def batch_create_multiple
+      do_batch_create_method(:do_batch_create_multiple)
+    end
+
+    def do_batch_create_multiple
       @error_records = {}
       params[:record].each do |scope, record_hash|
         do_create(record_hash)
-        error_records[scope] = @record unless successful?
+        error_records[scope] = @record unless successful? && !run_in_transaction?
+        @created_records += 1 if successful?
+        @processed_records += 1
       end
     end
 
@@ -146,10 +178,11 @@ module ActiveScaffold::Actions
         create_save
         if successful?
           marked_records_parent.delete(created_by.id) if batch_scope == 'MARKED' && marked_records_parent
-        else
-          error_records << @record
+          @records_count += 1
         end
+        error_records << @record unless successful? && !run_in_transaction?
       end
+      @processed_records += 1
     end
 
     def batch_create_by_column

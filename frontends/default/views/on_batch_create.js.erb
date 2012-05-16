@@ -9,7 +9,7 @@
   <% end %>
   ActiveScaffold.find_action_link('<%= form_selector %>').close();
 <% else %>
-  ActiveScaffold.find_action_link('<%= form_selector %>').update_flash_messages('<%= escape_javascript(render(:partial => 'messages').strip) %>');
+  ActiveScaffold.find_action_link('<%= form_selector %>').update_flash_messages('<%= escape_javascript(render(:partial => 'messages')) %>');
   ActiveScaffold.replace('<%= form_selector %>', '<%= escape_javascript(render(:partial => 'batch_create_form', :locals => {:xhr => true})) %>');
   ActiveScaffold.scroll_to('<%= form_selector %>', true);
 <% end %>

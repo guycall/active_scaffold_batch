@@ -5,6 +5,7 @@ module ActiveScaffold::Config
       super
       @process_mode = self.class.process_mode
       @list_mode_enabled = self.class.list_mode_enabled
+      @run_in_transaction = self.class.run_in_transaction
     end
 
     # global level configuration
@@ -32,6 +33,12 @@ module ActiveScaffold::Config
     # too "dangerous"
     cattr_accessor :list_mode_enabled
     @@list_mode_enabled = true
+
+    # run all create statements in a transaction, so no record is created
+    # if someone fails
+    cattr_accessor :run_in_transaction
+    @@run_in_transaction = true
+
     # instance-level configuration
     # ----------------------------
 
@@ -45,6 +52,10 @@ module ActiveScaffold::Config
     # eg. player belongs to team
     # you may batch create a player records for a list of teams
     attr_accessor :default_batch_by_column
+
+    # run all create statements in a transaction, so no record is created
+    # if someone fails
+    attr_accessor :run_in_transaction
 
     def action_group
       @action_group || (default_batch_by_column ? 'collection.group' : 'collection')
