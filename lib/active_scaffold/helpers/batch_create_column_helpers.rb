@@ -25,6 +25,10 @@ module ActiveScaffold
         html_options[:multiple] = true
         select_tag(column.name, options_for_select(select_options.uniq, associated_options), html_options)
       end
+
+      def batch_create_multiple_remove_link
+        link_to as_(:remove), '#', :class => 'remove'
+      end
     end
   end
 end

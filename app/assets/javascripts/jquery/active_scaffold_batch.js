@@ -4,4 +4,8 @@ jQuery(document).ready(function() {
     if (num_records) settings.url += (settings.url.indexOf('?') != -1 ? '&' : '?') + 'num_records=' + num_records;
     return true;
   });
+  jQuery('.multiple .form_record > a.remove').live('click', function(event) {
+    event.preventDefault();
+    jQuery(this).closest('.form_record').remove();
+  });
 });
