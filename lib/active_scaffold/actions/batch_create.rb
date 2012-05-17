@@ -2,6 +2,7 @@ module ActiveScaffold::Actions
   module BatchCreate
 
     def self.included(base)
+      base.send :include, ActiveScaffold::Actions::BatchBase unless base < ActiveScaffold::Actions::BatchBase
       base.before_filter :batch_create_authorized_filter, :only => [:batch_new, :batch_create]
       base.helper_method :batch_create_values
       base.helper_method :batch_create_by_column
@@ -78,7 +79,7 @@ module ActiveScaffold::Actions
           @batch_create_by_records = column_plural_assocation_value_from_value(column, marked_records_parent)
         end
       else
-        @scope = "[#{temporary_id}]"
+        @scope = temporary_id
       end
     end
 

@@ -29,6 +29,10 @@ module ActiveScaffold
       def batch_create_multiple_remove_link
         link_to as_(:remove), '#', :class => 'remove'
       end
+
+      def batch_create_multiple_layout
+        "batch_create_form_#{active_scaffold_config.batch_create.layout}"
+      end
     end
   end
 end

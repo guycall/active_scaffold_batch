@@ -6,6 +6,7 @@ module ActiveScaffold::Config
       @process_mode = self.class.process_mode
       @list_mode_enabled = self.class.list_mode_enabled
       @run_in_transaction = self.class.run_in_transaction
+      @layout = self.class.layout
     end
 
     # global level configuration
@@ -39,6 +40,10 @@ module ActiveScaffold::Config
     cattr_accessor :run_in_transaction
     @@run_in_transaction = true
 
+    # layout for create multiple records
+    cattr_accessor :layout
+    @@layout = :vertical
+
     # instance-level configuration
     # ----------------------------
 
@@ -56,6 +61,9 @@ module ActiveScaffold::Config
     # run all create statements in a transaction, so no record is created
     # if someone fails
     attr_accessor :run_in_transaction
+
+    # layout for create multiple records
+    attr_accessor :layout
 
     def action_group
       @action_group || (default_batch_by_column ? 'collection.group' : 'collection')

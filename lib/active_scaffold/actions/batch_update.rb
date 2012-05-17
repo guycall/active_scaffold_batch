@@ -22,6 +22,7 @@ module ActiveScaffold::Actions
     ]
     
     def self.included(base)
+      base.send :include, ActiveScaffold::Actions::BatchBase unless base < ActiveScaffold::Actions::BatchBase
       base.before_filter :batch_update_authorized_filter, :only => [:batch_edit, :batch_update]
       base.helper_method :batch_update_values
     end
@@ -175,7 +176,7 @@ module ActiveScaffold::Actions
       attributes = {} unless attributes.is_a?(Hash)
       columns.each :for => new_model, :crud_type => :update, :flatten => true do |column|
         value = attributes[column.name]
-        value = value.merge(:value => (value[:operator] == 'NULL') ? nil : column_value_from_param_value(nil, column, value[:value])
+        value = value.merge(:value => (value[:operator] == 'NULL') ? nil : column_value_from_param_value(nil, column, value[:value]))
         values[column.name] = {:column => column, :value => value}
       end
       values

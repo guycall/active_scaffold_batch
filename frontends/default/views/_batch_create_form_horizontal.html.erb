@@ -1,0 +1,14 @@
+<div class="form sub-form horizontal-sub-form">
+<table cellpadding="0" cellspacing="0">
+  <% @record = records.first -%>
+  <%= render :partial => 'batch_create_form_horizontal_header', :locals => {:columns => columns, :record => @record} %>
+
+  <tbody id="<%= element_form_id :action => form_action %>-content" class="multiple">
+    <% first = true -%>
+    <% records.each do |scope, @record| %>
+    <%= render :partial => 'batch_create_form_horizontal_record', :locals => { :columns => columns, :form_action => form_action, :scope => "[#{scope}]", :first => first } %>
+    <% first = false -%>
+    <% end -%>
+  </tbody>
+</table>
+</div>

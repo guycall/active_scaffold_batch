@@ -6,6 +6,8 @@ document.observe("dom:loaded", function() {
   });
   document.on('click', '.multiple .form_record > a.remove', function(event) {
     event.stop();
-    $(this).up('.form_record').remove();
+    var record = $(this).up('.form_record'), errors = record.previous('.form_record-errors');
+    if (errors) errors.remove();
+    record.remove();
   });
 });

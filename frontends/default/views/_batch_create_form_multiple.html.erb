@@ -1,11 +1,8 @@
-<div id="<%= element_form_id :action => form_action %>-content" class="multiple">
-<% if @error_records.present? -%>
-<% first = true -%>
-<% @error_records.each do |scope, @record| -%>
-  <%= render :partial => 'batch_create_form_record', :locals => { :columns => columns, :form_action => form_action, :scope => "[#{scope}]", :first => first } %>
-  <% first = false -%>
-<% end -%>
-<% else -%>
-  <%= render :partial => 'batch_create_form_record', :locals => { :columns => columns, :form_action => form_action, :scope => scope } %>
-<% end -%>
-</div>
+<%
+  records = if @error_records.present?
+    @error_records
+  else
+    {scope => @record}
+  end
+-%>
+<%= render :partial => batch_create_multiple_layout, :locals => { :columns => columns, :form_action => form_action, :records => records } %>
