@@ -116,50 +116,53 @@ module ActiveScaffold::Actions
       active_scaffold_config.batch_create.run_in_transaction
     end
 
-    def do_batch_create_method(method)
-      @created_records = 0
-      @processed_records = 0
+    def run_in_transaction_if_enabled
+      processed_records, created_records = 0
       if run_in_transaction?
         active_scaffold_config.model.transaction do
-          send(method)
-          if @processed_records == @created_records
+          processed_records, created_records = yield
+          if processed_records == created_records
             @error_records = []
           else
-            @created_records = 0
+            created_records = 0
             raise ActiveRecord::Rollback
           end
         end
       else
-        send(method)
+        processed_records, created_records = yield
       end
-      flash[:info] = as_(:some_records_created, :count => @created_records, :model => active_scaffold_config.label(:count => @created_records)) if batch_successful? || @created_records > 0
+      flash[:info] = as_(:some_records_created, :count => created_records, :model => active_scaffold_config.label(:count => created_records)) if batch_successful? || created_records > 0
     end
 
     def batch_create_listed
-      do_batch_create_method(:do_batch_create_listed)
-    end
-
-    def do_batch_create_listed
-      case active_scaffold_config.batch_create.process_mode
-      when :create then
-        batch_create_by_records.each {|batch_record| create_record_in_batch(batch_record)}
-      else
-        Rails.logger.error("Unknown process_mode: #{active_scaffold_config.batch_create.process_mode} for action batch_create")
+      run_in_transaction_if_enabled do
+        processed_records = created_records = 0
+        case active_scaffold_config.batch_create.process_mode
+        when :create then
+          batch_create_by_records.each do |batch_record|
+            create_record_in_batch(batch_record)
+            created_records += 1 if successful?
+            processed_records += 1
+          end
+        else
+          Rails.logger.error("Unknown process_mode: #{active_scaffold_config.batch_create.process_mode} for action batch_create")
+        end
+        [processed_records, created_records]
       end
     end
     alias_method :batch_create_marked, :batch_create_listed
 
     def batch_create_multiple
-      do_batch_create_method(:do_batch_create_multiple)
-    end
-
-    def do_batch_create_multiple
-      @error_records = {}
-      params[:record].each do |scope, record_hash|
-        do_create(record_hash)
-        error_records[scope] = @record unless successful? && !run_in_transaction?
-        @created_records += 1 if successful?
-        @processed_records += 1
+      run_in_transaction_if_enabled do
+        @error_records = {}
+        processed_records = created_records = 0
+        params[:record].each do |scope, record_hash|
+          do_create(record_hash)
+          error_records[scope] = @record unless successful? && !run_in_transaction?
+          created_records += 1 if successful?
+          processed_records += 1
+        end
+        [processed_records, created_records]
       end
     end
 
@@ -179,11 +182,9 @@ module ActiveScaffold::Actions
         create_save
         if successful?
           marked_records_parent.delete(created_by.id) if batch_scope == 'MARKED' && marked_records_parent
-          @records_count += 1
         end
         error_records << @record unless successful? && !run_in_transaction?
       end
-      @processed_records += 1
     end
 
     def batch_create_by_column
