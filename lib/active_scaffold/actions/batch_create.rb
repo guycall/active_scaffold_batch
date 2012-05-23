@@ -116,12 +116,17 @@ module ActiveScaffold::Actions
       active_scaffold_config.batch_create.run_in_transaction
     end
 
+    def validate_first?
+      active_scaffold_config.batch_create.run_in_transaction == :validate_first
+    end
+
     def run_in_transaction_if_enabled
       processed_records, created_records = 0
       if run_in_transaction?
         active_scaffold_config.model.transaction do
           processed_records, created_records = yield
           if processed_records == created_records
+            @error_records.each { |record| create_save(record) } if validate_first?
             @error_records = []
           else
             created_records = 0
@@ -157,7 +162,7 @@ module ActiveScaffold::Actions
         @error_records = {}
         processed_records = created_records = 0
         params[:record].each do |scope, record_hash|
-          do_create(record_hash)
+          do_create(:attributes => record_hash, :skip_save => validate_first?)
           error_records[scope] = @record unless successful? && !run_in_transaction?
           created_records += 1 if successful?
           processed_records += 1
