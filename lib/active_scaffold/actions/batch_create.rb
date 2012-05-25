@@ -126,7 +126,7 @@ module ActiveScaffold::Actions
         active_scaffold_config.model.transaction do
           processed_records, created_records = yield
           if processed_records == created_records
-            @error_records.each { |record| create_save(record) } if validate_first?
+            @error_records.each { |_, record| create_save(record) } if validate_first?
             @error_records = []
           else
             created_records = 0
