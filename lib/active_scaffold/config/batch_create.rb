@@ -3,6 +3,7 @@ module ActiveScaffold::Config
     self.crud_type = :create
     def initialize(*args)
       super
+      @multipart = @core.create.multipart? if @core.actions.include? :create
       @process_mode = self.class.process_mode
       @list_mode_enabled = self.class.list_mode_enabled
       @run_in_transaction = self.class.run_in_transaction
