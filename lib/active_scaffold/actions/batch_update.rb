@@ -83,12 +83,7 @@ module ActiveScaffold::Actions
     end
 
     def before_do_batch_update
-      update_columns = active_scaffold_config.batch_update.columns.select do |column|
-        if params[:record] && params[:record].is_a?(Hash) && params[:record][column.name].is_a?(Hash)
-          params[:record][column.name][:operator] != 'NO_UPDATE'
-        end
-      end
-      @batch_update_values = update_attribute_values_from_params(update_columns, params[:record])
+      @batch_update_values = update_attribute_values_from_params(active_scaffold_config.batch_update.columns, params[:record])
     end
 
     def batch_update_listed
@@ -111,11 +106,11 @@ module ActiveScaffold::Actions
     def batch_update_marked
       case active_scaffold_config.batch_update.process_mode
       when :update then
-        active_scaffold_config.model.marked.each {|record| update_record_in_batch(record) if authorized_for_job?(record)}
+        each_marked_record {|record| update_record_in_batch(record) if authorized_for_job?(record)}
       when :update_all then
         updates = updates_for_update_all
         unless updates.first.empty?
-          active_scaffold_config.model.marked.update_all(updates)
+          active_scaffold_config.model.where(active_scaffold_config.model.primary_key => marked_records.to_a).update_all(updates)
           do_demark_all
         end
       else
@@ -141,12 +136,12 @@ module ActiveScaffold::Actions
       @record = record
 
       batch_update_values.each do |attribute, value|
-        set_record_attribute(value[:column], attribute, value)
+        set_record_attribute(value[:column], attribute, value[:value])
       end
       
       update_save(:no_record_param_update => true)
       if successful?
-        @record.marked = false if batch_scope == 'MARKED'
+        @record.as_marked = false if batch_scope == 'MARKED'
       else
         error_records << @record
       end
@@ -175,6 +170,7 @@ module ActiveScaffold::Actions
       values = {}
       attributes = {} unless attributes.is_a?(Hash)
       columns.each :for => new_model, :crud_type => :update, :flatten => true do |column|
+        next unless attributes[column.name].is_a?(Hash) && params[:record][column.name][:operator] != 'NO_UPDATE'
         value = attributes[column.name]
         value = value.merge(:value => (value[:operator] == 'NULL') ? nil : column_value_from_param_value(nil, column, value[:value]))
         values[column.name] = {:column => column, :value => value}

@@ -34,11 +34,11 @@ module ActiveScaffold::Actions
     def batch_destroy_marked
       case active_scaffold_config.batch_destroy.process_mode
       when :delete then
-        active_scaffold_config.model.marked.each do |record|
+        each_marked_record do |record|
           destroy_record(record) if authorized_for_job?(record)
         end
       when :delete_all then
-        active_scaffold_config.model.marked.delete_all
+        active_scaffold_config.model.where(active_scaffold_config.model.primary_key => marked_records.to_a).delete_all
         do_demark_all
       else
         Rails.logger.error("Unknown process_mode: #{active_scaffold_config.batch_destroy.process_mode} for action batch_destroy")
@@ -51,7 +51,7 @@ module ActiveScaffold::Actions
 
       do_destroy
       if successful?
-        @record.marked = false if batch_scope == 'MARKED'
+        @record.as_marked = false if batch_scope == 'MARKED'
       else
         error_records << @record
       end
@@ -64,7 +64,7 @@ module ActiveScaffold::Actions
     end
 
     def batch_destroy_marked_ignore?(record = nil)
-      !active_scaffold_config.list.columns.include? :marked
+      !active_scaffold_config.actions.include? :mark
     end
 
     private
