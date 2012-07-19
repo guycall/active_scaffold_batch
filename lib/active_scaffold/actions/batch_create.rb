@@ -46,6 +46,16 @@ module ActiveScaffold::Actions
     end
 
     def batch_create_by_records
+      if @batch_create_by_records.nil?
+        if marked_records_parent
+          column = active_scaffold_config.columns[batch_create_by_column.to_sym]
+          @batch_create_by_records = if column.polymorphic_association?
+            active_scaffold_config_for(params[:batch_create_by].singularize).model.find(marked_records_parent.to_a)
+          else
+            column_plural_assocation_value_from_value(column, marked_records_parent)
+          end
+        end
+      end
       @batch_create_by_records || []
     end
 
@@ -73,11 +83,7 @@ module ActiveScaffold::Actions
       self.successful = true
       do_new
       if batch_create_by_column
-        if marked_records_parent
-          batch_scope # that s a dummy call to remove batch_scope parameter
-          column = active_scaffold_config.columns[batch_create_by_column.to_sym]
-          @batch_create_by_records = column_plural_assocation_value_from_value(column, marked_records_parent)
-        end
+        batch_scope # that s a dummy call to remove batch_scope parameter
       else
         @scope = temporary_id
       end
@@ -184,7 +190,7 @@ module ActiveScaffold::Actions
       end
 
       if authorized_for_job?(@record)
-        create_save
+        create_save(@record)
         if successful?
           marked_records_parent.delete(created_by.id) if batch_scope == 'MARKED' && marked_records_parent
         end
@@ -198,7 +204,7 @@ module ActiveScaffold::Actions
 
     def create_attribute_values_from_params(columns, attributes)
       values = {}
-      columns.each :for => model, :crud_type => :create, :flatten => true do |column|
+      columns.each :for => active_scaffold_config.model, :crud_type => :create, :flatten => true do |column|
         next unless attributes.has_key?(column.name)
         if column == batch_create_by_column.to_sym
           @batch_create_by_records = column_plural_assocation_value_from_value(column, attributes[column.name])

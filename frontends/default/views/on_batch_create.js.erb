@@ -5,7 +5,7 @@
   <% if called_by_controller.nil? %>
     ActiveScaffold.replace_html('<%= active_scaffold_content_id %>','<%= escape_javascript(render(:partial => 'list', :layout => false)) %>');
   <% else %>
-    ActiveScaffold.mark_records('<%= "#{controller_id(called_by_controller)}-tbody" %>', <%= {:checked => false, :include_mark_all => false}.to_json %>);
+    ActiveScaffold.mark_records('<%= "#{controller_id(called_by_controller)}-tbody" %>', <%= {:checked => false, :include_checkboxes => true}.to_json.html_safe %>);
   <% end %>
   ActiveScaffold.find_action_link('<%= form_selector %>').close();
 <% else %>
