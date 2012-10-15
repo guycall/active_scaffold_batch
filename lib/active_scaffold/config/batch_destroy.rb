@@ -6,7 +6,7 @@ module ActiveScaffold::Config
       @core = core_config
 
       # start with the ActionLink defined globally
-      @link = self.class.link.clone unless self.class.link.nil?
+      @link = self.class.link.map(&:clone) unless self.class.link.nil?
       @action_group = self.class.action_group.clone if self.class.action_group
       @action_group ||= 'collection.batch.destroy'
       @process_mode = self.class.process_mode
