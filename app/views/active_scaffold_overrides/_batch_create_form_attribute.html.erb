@@ -4,7 +4,7 @@
     <label for="<%= active_scaffold_input_options(column, scope)[:id] %>"><%= column.label %></label>
   </dt>
   <dd>
-    <% if batch_create_by_column.to_sym == column %>
+    <% if column == batch_create_by_column.to_sym %>
       <%= active_scaffold_batch_create_by_column column, scope %>
     <% else %>
       <%= active_scaffold_input_for column, scope %>
