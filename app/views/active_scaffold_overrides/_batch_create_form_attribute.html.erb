@@ -1,13 +1,13 @@
 <% scope ||= nil %>
 <dl>
   <dt>
-    <label for="<%= active_scaffold_input_options(column, scope)[:id] %>"><%= column.label %></label>
+    <label for="<%= (options = active_scaffold_input_options(column, scope, :object => record))[:id] %>"><%= column.label %></label>
   </dt>
   <dd>
     <% if column == batch_create_by_column.to_sym %>
-      <%= active_scaffold_batch_create_by_column column, scope %>
+      <%= active_scaffold_batch_create_by_column column, scope, :object => record %>
     <% else %>
-      <%= active_scaffold_input_for column, scope %>
+      <%= active_scaffold_input_for column, scope, options %>
       <% if column.update_columns -%>
         <%= loading_indicator_tag(:action => :render_field, :id => params[:id]) %>
       <% end -%>

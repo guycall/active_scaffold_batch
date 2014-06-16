@@ -1,8 +1,8 @@
 <% first = true unless local_assigns.has_key? :first -%>
-<% if @record.errors.count -%>
+<% if record.errors.count -%>
 <tr class="form_record-errors">
-  <td colspan="<%= columns.length + 1 %>" id="<%= element_messages_id :action => @record.class.name.underscore %>">
-    <%= active_scaffold_error_messages_for :record, :object_name => @record.class.model_name.human.downcase %>
+  <td colspan="<%= columns.length + 1 %>" id="<%= element_messages_id :action => record.class.name.underscore %>">
+    <%= active_scaffold_error_messages_for :record, :object_name => record.class.model_name.human.downcase %>
   </td>
 </tr>
 <% end %>
@@ -10,7 +10,7 @@
 <% columns.each :flatten => true do |column| -%>
 <%
   next if column_renders_as(column) == :hidden
-  next unless @record.authorized_for?(:crud_type => :create, :column => column.name) 
+  next unless record.authorized_for?(:crud_type => :create, :column => column.name) 
   column = column.clone
   column.form_ui ||= :select if column.association
   
@@ -19,7 +19,7 @@
   col_class << column.css_class unless column.css_class.nil?
 -%>
   <td class="<%= col_class.join(' ') %>">
-    <%= render :partial => form_partial_for_column(column), :locals => { :column => column, :scope => scope } -%>
+    <%= render :partial => form_partial_for_column(column), :locals => { :column => column, :scope => scope, :record => record } -%>
   </td>
 <% end -%>
   <td><%= batch_create_multiple_remove_link unless first %></td>

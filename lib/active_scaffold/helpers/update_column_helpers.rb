@@ -9,7 +9,7 @@ module ActiveScaffold
 
         # first, check if the dev has created an override for this specific field for search
         if (method = override_update_field(column))
-          send(method, @record, options)
+          send(method, options[:object], options)
         # second, check if the dev has specified a valid form_ui for this column, using specific ui for searches
         elsif column.form_ui and (method = override_update(column.form_ui))
           send(method, column, options)
