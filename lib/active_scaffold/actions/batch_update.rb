@@ -93,7 +93,7 @@ module ActiveScaffold::Actions
       when :update_all then
         updates = updates_for_update_all
         unless updates.first.empty?
-          do_search if respond_to? :do_search
+          do_search if respond_to? :do_search, true
           # all_conditions might fail cause joins are not working in update_all
           active_scaffold_config.model.update_all(updates, all_conditions)
         end
@@ -260,12 +260,12 @@ module ActiveScaffold::Actions
 
     def override_batch_update_value(form_ui)
       method = "batch_update_value_for_#{form_ui}"
-      method if respond_to? method
+      method if respond_to? method, true
     end
 
     def override_batch_update_all_value(form_ui)
       method = "batch_update_all_value_for_#{form_ui}"
-      method if respond_to? method
+      method if respond_to? method, true
     end
 
     private

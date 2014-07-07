@@ -227,7 +227,7 @@ module ActiveScaffold::Actions
 
     def override_batch_create_value(form_ui)
       method = "batch_create_value_for_#{form_ui}"
-      method if respond_to? method
+      method if respond_to? method, true
     end
 
     def create_ignore?
