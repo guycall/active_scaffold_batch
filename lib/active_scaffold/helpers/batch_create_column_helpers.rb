@@ -9,8 +9,10 @@ module ActiveScaffold
 
         if column.form_ui == :record_select
           active_scaffold_record_select(column, options, batch_create_by_records, true)
-        else
+        elsif column.association
           active_scaffold_batch_create_singular_association(column, options)
+        else
+          text_area_tag(column.name, params[:record] ? params[:record][column.name] : '', options.merge(column.options[:html_options] || {}))
         end
 
       end

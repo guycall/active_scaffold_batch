@@ -207,12 +207,20 @@ module ActiveScaffold::Actions
       columns.each :for => active_scaffold_config.model, :crud_type => :create, :flatten => true do |column|
         next unless attributes.has_key?(column.name)
         if column == batch_create_by_column.to_sym
-          @batch_create_by_records = column_plural_assocation_value_from_value(column, attributes[column.name])
+          @batch_create_by_records = batch_values_for_column(column, attributes[column.name])
         else
           values[column.name] = {:column => column, :value => column_value_from_param_value(nil, column, attributes[column.name])}
         end
       end
       values
+    end
+
+    def batch_values_for_column(column, value)
+      if column.association
+        column_plural_assocation_value_from_value(column, value)
+      else
+        value.split("\n")
+      end
     end
     
     # The default security delegates to ActiveRecordPermissions.
