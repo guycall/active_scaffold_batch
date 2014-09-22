@@ -67,7 +67,7 @@ module ActiveScaffold::Config
     attr_accessor :layout
 
     def action_group
-      @action_group || (default_batch_by_column ? 'collection.group' : 'collection')
+      @action_group || (default_batch_by_column ? 'collection.batch' : 'collection')
     end
 
     # the label= method already exists in the Form base class
