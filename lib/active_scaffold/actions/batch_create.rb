@@ -50,9 +50,9 @@ module ActiveScaffold::Actions
         if marked_records_parent
           column = active_scaffold_config.columns[batch_create_by_column.to_sym]
           @batch_create_by_records = if column.polymorphic_association?
-            active_scaffold_config_for(params[:batch_create_by].singularize).model.find(marked_records_parent.to_a)
+            active_scaffold_config_for(params[:batch_create_by].singularize).model.find(marked_records_parent.keys)
           else
-            column_plural_assocation_value_from_value(column, marked_records_parent)
+            column_plural_assocation_value_from_value(column, marked_records_parent.keys)
           end
         end
       end
@@ -101,7 +101,7 @@ module ActiveScaffold::Actions
       if @marked_records_parent.nil?
         @marked_records_parent = if params[:batch_create_by]
           session_parent = active_scaffold_session_storage(params[:batch_create_by])
-          session_parent[:marked_records] || Set.new
+          session_parent[:marked_records] || {}
         else
           false
         end
@@ -184,7 +184,7 @@ module ActiveScaffold::Actions
     def create_record_in_batch(created_by)
       @successful = nil
       @record = new_batch_create_record(created_by)
-      @record.send("#{batch_create_by_column.to_s}=", created_by)
+      @record.send("#{batch_create_by_column}=", created_by)
       batch_create_values.each do |attribute, value|
         set_record_attribute(value[:column], attribute, value[:value])
       end
@@ -192,7 +192,7 @@ module ActiveScaffold::Actions
       if authorized_for_job?(@record)
         create_save(@record)
         if successful?
-          marked_records_parent.delete(created_by.id) if batch_scope == 'MARKED' && marked_records_parent
+          marked_records_parent.delete(created_by.id.to_s) if batch_scope == 'MARKED' && marked_records_parent
         end
         error_records << @record unless successful? && !run_in_transaction?
       end
