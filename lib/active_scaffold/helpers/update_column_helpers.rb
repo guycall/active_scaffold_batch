@@ -6,6 +6,7 @@ module ActiveScaffold
       # It does not do any rendering. It only decides which method is responsible for rendering.
       def active_scaffold_update_for(column, scope = nil, options = {})
         options = active_scaffold_input_options(column, scope, options)
+        options.delete(:required)
 
         # first, check if the dev has created an override for this specific field for search
         if (method = override_update_field(column))
