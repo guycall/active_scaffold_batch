@@ -132,7 +132,7 @@ module ActiveScaffold::Actions
         active_scaffold_config.model.transaction do
           processed_records, created_records = yield
           if processed_records == created_records
-            @error_records.each { |_, record| create_save(record) } if validate_first?
+            @error_records.each { |key, record| create_save(record || key) } if validate_first?
             @error_records = []
           else
             created_records = 0
@@ -190,7 +190,12 @@ module ActiveScaffold::Actions
       end
 
       if authorized_for_job?(@record)
-        create_save(@record)
+        if validate_first?
+          self.successful = [@record.valid?, @record.associated_valid?].all?
+        else
+          create_save(@record) rescue nil
+          self.successful = @record.persisted?
+        end
         if successful?
           marked_records_parent.delete(created_by.id.to_s) if batch_scope == 'MARKED' && marked_records_parent
         end
@@ -219,7 +224,7 @@ module ActiveScaffold::Actions
       if column.association
         column_plural_assocation_value_from_value(column, value)
       else
-        value.split("\n")
+        value.split
       end
     end
     

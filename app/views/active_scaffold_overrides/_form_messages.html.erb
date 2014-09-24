@@ -1,4 +1,4 @@
-<% if @error_records.present? && @record_errors.is_a?(Array) -%>
+<% if @error_records.present? && @error_records.is_a?(Array) -%>
   <%= render :partial => 'messages' unless request.xhr? %>
 
   <% @error_records.each do |record| %>
