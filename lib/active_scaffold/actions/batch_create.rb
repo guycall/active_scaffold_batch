@@ -198,6 +198,8 @@ module ActiveScaffold::Actions
         end
         if successful?
           marked_records_parent.delete(created_by.id.to_s) if batch_scope == 'MARKED' && marked_records_parent
+        elsif @record.errors[batch_create_by_column]
+          @record.errors.messages[batch_create_by_column].map!{|e| "#{@record.send(batch_create_by_column)} #{e}"}
         end
         error_records << @record unless successful? && !run_in_transaction?
       end
