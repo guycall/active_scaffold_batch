@@ -49,7 +49,7 @@ module ActiveScaffold::Actions
       @successful = nil
       @record = record
 
-      do_destroy
+      do_destroy(record)
       if successful?
         @record.as_marked = false if batch_scope == 'MARKED'
       else
