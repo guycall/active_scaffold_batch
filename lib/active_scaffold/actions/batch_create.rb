@@ -226,7 +226,7 @@ module ActiveScaffold::Actions
       if column.association
         column_plural_assocation_value_from_value(column, value)
       else
-        value.split
+        value.split($/)
       end
     end
     
