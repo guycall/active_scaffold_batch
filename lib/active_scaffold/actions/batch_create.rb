@@ -101,7 +101,7 @@ module ActiveScaffold::Actions
       if @marked_records_parent.nil?
         @marked_records_parent = if params[:batch_create_by]
           session_parent = active_scaffold_session_storage(params[:batch_create_by])
-          session_parent[:marked_records] || {}
+          session_parent['marked_records'] || {}
         else
           false
         end
@@ -229,7 +229,7 @@ module ActiveScaffold::Actions
         value.split($/)
       end
     end
-    
+
     # The default security delegates to ActiveRecordPermissions.
     # You may override the method to customize.
     def batch_create_authorized?(record = nil)
