@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.email = "activescaffold@googlegroups.com"
   s.authors = ["Sergio Cambra", "Volker Hochstein"]
   s.require_paths = ["lib"]
-  s.files = `git ls-files {app,config,frontends,lib,public,shoulda_macros,vendor}`.split("\n") + %w[LICENSE.txt README]
+  s.files = `git ls-files {app,config,lib,vendor}`.split($/) + %w[LICENSE.txt README]
   s.extra_rdoc_files = [
     "README"
   ]
