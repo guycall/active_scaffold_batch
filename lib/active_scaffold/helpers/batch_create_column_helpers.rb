@@ -19,7 +19,7 @@ module ActiveScaffold
 
       def active_scaffold_batch_create_singular_association(column, html_options)
         associated_options = batch_create_by_records.collect {|r| r.id}
-        select_options = options_for_association(column.association)
+        select_options = sorted_association_options_find(column.association, nil, html_options.delete(:record))
         html_options.update(column.options[:html_options] || {})
         options = {}
         options.update(column.options)
