@@ -20,10 +20,11 @@ module ActiveScaffold
       def active_scaffold_batch_create_singular_association(column, html_options)
         associated_options = batch_create_by_records.collect {|r| r.id}
         select_options = sorted_association_options_find(column.association, nil, html_options.delete(:record))
+        select_options = select_options.collect{ |r| [r.send(:to_label), r.id] }.uniq
         html_options.update(column.options[:html_options] || {})
         html_options[:name] = "#{html_options[:name]}[]" 
         html_options[:multiple] = true
-        select_tag(column.name, options_for_select(select_options.uniq, associated_options), html_options)
+        select_tag(column.name, options_for_select(select_options, associated_options), html_options)
       end
 
       def batch_create_multiple_remove_link
