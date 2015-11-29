@@ -21,8 +21,6 @@ module ActiveScaffold
         associated_options = batch_create_by_records.collect {|r| r.id}
         select_options = sorted_association_options_find(column.association, nil, html_options.delete(:record))
         html_options.update(column.options[:html_options] || {})
-        options = {}
-        options.update(column.options)
         html_options[:name] = "#{html_options[:name]}[]" 
         html_options[:multiple] = true
         select_tag(column.name, options_for_select(select_options.uniq, associated_options), html_options)
